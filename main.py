@@ -205,7 +205,7 @@ def train(train_loader, val_loader, class_weights, class_encoding):
     metric = IoU(num_classes, ignore_index=ignore_index)
 
     # Optionally resume from a checkpoint
-    if args.resume | 1==1:
+    if args.resume :
         model, optimizer, start_epoch, best_miou = utils.load_checkpoint(
             model, optimizer, args.save_dir, args.name)
         print("Resuming from model: Start epoch = {0} "
