@@ -3,6 +3,8 @@ import torchvision
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+from google.colab.patches import cv2_imshow
+
 
 
 def batch_transform(batch, transform):
@@ -42,6 +44,25 @@ def imshow_batch(images, labels):
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(15, 7))
     ax1.imshow(np.transpose(images, (1, 2, 0)))
     ax2.imshow(np.transpose(labels, (1, 2, 0)))
+
+   # cv2_imshow(np.transpose(images, (1, 2, 0)))
+   # cv2_imshow(np.transpose(labels, (1, 2, 0)))
+
+    array1 = np.transpose(images, (1, 2, 0))
+    array2 = np.transpose(labels, (1, 2, 0))
+
+    import imageio
+
+
+    imageio.imwrite('1.jpeg', array1)
+    imageio.imwrite('2.jpeg', array2)
+
+
+    #im = Image.fromarray(array1)
+    #im.save("out.jpeg")
+
+    #im2 = Image.fromarray(array2)
+    #im2.save("out2.jpeg")
 
     plt.show()
 

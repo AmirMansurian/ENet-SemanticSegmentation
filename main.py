@@ -17,9 +17,12 @@ from args import get_arguments
 from data.utils import enet_weighing, median_freq_balancing
 import utils
 
+
 ################### models####################
 from models.pspnet import PSPNet
 from models.enet import ENet
+from models.bisenetv2 import BiSeNetV2
+from models.bisenetv1 import BiSeNetV1
 ##############################################
 
 # Get the arguments
@@ -157,25 +160,27 @@ def train(train_loader, val_loader, class_weights, class_encoding):
 ############################################### Distillation ###########################################################
 
     # student model E-net
-    model = ENet(num_classes).to(device)
+    #model = ENet(num_classes).to(device)
+
+    model = BiSeNetV2(n_classes=num_classes).cuda()
 
     # teacher model resnet34
-    model2 = PSPNet(n_classes=num_classes, sizes=(1, 2, 3, 6), psp_size=512, deep_features_size=256, backend='resnet18').to(device)
+    #model2 = PSPNet(n_classes=num_classes, sizes=(1, 2, 3, 6), psp_size=512, deep_features_size=256, backend='resnet18').to(device)
     
     optimizer = optim.Adam(
         model.parameters(),
         lr=args.learning_rate,
         weight_decay=args.weight_decay)
 
-    optimizer2 = optim.Adam(
-        model2.parameters(),
-        lr=args.learning_rate,
-        weight_decay=args.weight_decay)
+    #optimizer2 = optim.Adam(
+      #  model2.parameters(),
+      #  lr=args.learning_rate,
+      #  weight_decay=args.weight_decay)
 
     ########### changed ########################
     #teacher = utils.load_checkpoint(model2, optimizer, 'save/ENet_CamVid', args.name)[0]
 
-    teacher = utils.load_checkpoint(model2, None, 'save/ENet_CamVid', args.name)[0]
+   # teacher = utils.load_checkpoint(model2, None, 'save/ENet_CamVid', args.name)[0]
 
 
   ################################################################################################################  
@@ -200,7 +205,7 @@ def train(train_loader, val_loader, class_weights, class_encoding):
     metric = IoU(num_classes, ignore_index=ignore_index)
 
     # Optionally resume from a checkpoint
-    if args.resume:
+    if args.resume | 1==1:
         model, optimizer, start_epoch, best_miou = utils.load_checkpoint(
             model, optimizer, args.save_dir, args.name)
         print("Resuming from model: Start epoch = {0} "
@@ -211,7 +216,7 @@ def train(train_loader, val_loader, class_weights, class_encoding):
 
     # Start Training
     print()
-    train = Train(model, teacher, train_loader, optimizer, criterion, metric, device)
+    train = Train(model, None, train_loader, optimizer, criterion, metric, device)
     val = Test(model, val_loader, criterion, metric, device)
     for epoch in range(start_epoch, args.epochs):
         print(">>>> [Epoch: {0:d}] Training".format(epoch))
@@ -277,7 +282,7 @@ def test(model, test_loader, class_weights, class_encoding):
         print("{0}: {1:.4f}".format(key, class_iou))
 
     # Show a batch of samples and labels
-    if args.imshow_batch:
+    if args.imshow_batch | 1==1:
         print("A batch of predictions from the test set...")
         images, _ = iter(test_loader).next()
         predict(model, images, class_encoding)
@@ -289,7 +294,7 @@ def predict(model, images, class_encoding):
     # Make predictions!
     model.eval()
     with torch.no_grad():
-        predictions = model(images)
+        predictions = model(images)[0]
 
     # Predictions is one-hot encoded with "num_classes" channels.
     # Convert it to a single int using the indices where the maximum (1) occurs
@@ -301,6 +306,7 @@ def predict(model, images, class_encoding):
     ])
     color_predictions = utils.batch_transform(predictions.cpu(), label_to_rgb)
     utils.imshow_batch(images.data.cpu(), color_predictions)
+
 
 
 # Run only if this module is being run directly
@@ -336,9 +342,10 @@ if __name__ == '__main__':
         if args.mode.lower() == 'test':
             # Intialize a new ENet model
             num_classes = len(class_encoding)
-            model = ENet(num_classes).to(device)
+            #model = ENet(num_classes).to(device)
             #model = PSPNet(n_classes=num_classes, sizes=(1, 2, 3, 6), psp_size=512, deep_features_size=256, backend='resnet18').to(device)
             #model = PSPNet(n_classes=num_classes, sizes=(1, 2, 3, 6), psp_size=512, deep_features_size=256, backend='resnet34').to(device)
+            model = BiSeNetV2(n_classes=num_classes).to(device)
 
 
 

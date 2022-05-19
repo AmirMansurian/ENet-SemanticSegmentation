@@ -43,7 +43,7 @@ class Test:
 
             with torch.no_grad():
                 # Forward propagation
-                outputs = self.model(inputs)
+                outputs = self.model(inputs)[0]
 
                 # Loss computation
                 loss = self.criterion(outputs, labels)
