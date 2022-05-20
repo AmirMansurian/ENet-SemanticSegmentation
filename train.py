@@ -5,6 +5,7 @@ from ohem_ce_loss import OhemCELoss
 import torch.cuda.amp as amp
 from lr_scheduler import WarmupPolyLrScheduler
 from meters import TimeMeter, AvgMeter
+import utils
 
 
 
@@ -79,6 +80,7 @@ class Train:
         ############## teacher ##################
         self.teacher = teacher
 
+
     def run_epoch(self, iteration_loss=False):
         """Runs an epoch of training.
 
@@ -90,10 +92,14 @@ class Train:
 
         """
         self.model.train()
+        #self.teacher.eval()
+
         criteria_pre = OhemCELoss(0.7)
         criteria_aux = [OhemCELoss(0.7) for _ in range(4)]
 
         optim = set_optimizer(self.model)
+
+        #self.teacher = utils.load_checkpoint(self.teacher, self.optim, 'save/', 'BiSeNet2v170')[0]
 
         ## mixed precision training
         scaler = amp.GradScaler()
@@ -118,13 +124,13 @@ class Train:
 
             # Forward propagation
            # outputs = self.model(inputs)[0]
-            
-           
+
+
 
             ########################### teacher output ###########################################
             #with torch.no_grad():
             #  teacher_out = self.teacher(inputs)
-            
+
             #distill_loss = nn.KLDivLoss()(F.log_softmax(outputs, dim=1), F.softmax(teacher_out, dim=1))
             ######################################################################################
 
@@ -134,6 +140,15 @@ class Train:
 
 
 
+            outputs = self.model(inputs)
+
+
+            with torch.no_grad():
+              teacher_out = self.teacher(inputs)[0]
+
+
+
+            #loss = self.criterion(outputs, labels)
 
 
 
@@ -141,31 +156,35 @@ class Train:
 
 
 
-
-
-
-
-
-
-            optim.zero_grad()
+            #optim.zero_grad()
             with amp.autocast(enabled=True):
                 logits, *logits_aux = self.model(inputs)
-                loss_pre = criteria_pre(logits, labels)
-                loss_aux = [crit(lgt, labels) for crit, lgt in zip(criteria_aux, logits_aux)]
-                loss = loss_pre + sum(loss_aux)
-            scaler.scale(loss).backward()
-            scaler.step(optim)
-            scaler.update()
-            torch.cuda.synchronize()
+               # loss_pre = criteria_pre(logits, labels)
+               # loss_aux = [crit(lgt, labels) for crit, lgt in zip(criteria_aux, logits_aux)]
+               # loss = loss_pre + sum(loss_aux)
+           # scaler.scale(loss).backward()
+            #scaler.step(optim)
+            #scaler.update()
+            #torch.cuda.synchronize()
 
-            time_meter.update()
-            loss_meter.update(loss.item())
-            loss_pre_meter.update(loss_pre.item())
-            _ = [mter.update(lss.item()) for mter, lss in zip(loss_aux_meters, loss_aux)]
+            #time_meter.update()
+            #loss_meter.update(loss.item())
+            #loss_pre_meter.update(loss_pre.item())
+            #_ = [mter.update(lss.item()) for mter, lss in zip(loss_aux_meters, loss_aux)]
+            T = 1
+            distill_loss = nn.KLDivLoss()(F.log_softmax(outputs/T, dim=1), F.softmax(teacher_out/T, dim=1))
+            loss = self.criterion(outputs, labels) + 10 * distill_loss
 
+            print(self.criterion(outputs, labels))
+            print(distill_loss)
 
+              # Backpropagation
+            self.optim.zero_grad()
+            loss.backward()
+            self.optim.step()
 
-
+            # Keep track of loss for current epoch
+            epoch_loss += loss.item()
 
 
 
@@ -190,9 +209,23 @@ class Train:
             #epoch_loss += loss.item()
 
             # Keep track of the evaluation metric
-            self.metric.add(logits.detach(), labels.detach())
+            #self.metric.add(logits.detach(), labels.detach())
+
+            #print(outputs.shape)
+            #print(labels.shape)
+            #loss = 1* self.criterion(outputs, labels)
+            #loss += 0.4 * nn.KLDivLoss()(F.log_softmax(outputs, dim=1), F.softmax(teacher_out, dim=1))
+
+
+
+            # Keep track of the evaluation metric
+            self.metric.add(outputs.detach(), labels.detach())
 
             if iteration_loss:
-                print("[Step: %d] Iteration loss: %.4f" % (step, loss.item()))
+                    print("[Step: %d] Iteration loss: %.4f" % (step, loss.item()))
 
-        return loss / len(self.data_loader), self.metric.value()
+        #return epoch_loss / len(self.data_loader), self.metric.value()
+
+
+        return epoch_loss / len(self.data_loader), self.metric.value()
+       # return loss / len(self.data_loader), self.metric.value()
