@@ -160,9 +160,12 @@ def train(train_loader, val_loader, class_weights, class_encoding):
 ############################################### Distillation ###########################################################
 
     # student model E-net
-    model = ENet(num_classes).to(device)
+    #model = ENet(num_classes).to(device)
+    model = PSPNet(n_classes=num_classes, sizes=(1, 2, 3, 6), psp_size=2048, deep_features_size=1024, backend='resnet50').to(device)
 
-    teacher = BiSeNetV2(n_classes=num_classes).cuda()
+
+
+    #teacher = BiSeNetV2(n_classes=num_classes).cuda()
 
     # teacher model resnet34
     #model2 = PSPNet(n_classes=num_classes, sizes=(1, 2, 3, 6), psp_size=512, deep_features_size=256, backend='resnet18').to(device)
@@ -172,13 +175,13 @@ def train(train_loader, val_loader, class_weights, class_encoding):
         lr=args.learning_rate,
         weight_decay=args.weight_decay)
 
-    optimizer2 = optim.Adam(
-        teacher.parameters(),
-        lr=args.learning_rate,
-        weight_decay=args.weight_decay)
+    #optimizer2 = optim.Adam(
+      #  teacher.parameters(),
+      #  lr=args.learning_rate,
+      #  weight_decay=args.weight_decay)
 
     ########### changed ########################
-    teacher = utils.load_checkpoint(teacher, optimizer2, 'save/', 'BiSeNet2v170')[0]
+    #teacher = utils.load_checkpoint(teacher, optimizer2, 'save/', 'BiSeNet2v170')[0]
 
    # teacher = utils.load_checkpoint(model2, None, 'save/ENet_CamVid', args.name)[0]
 
@@ -216,7 +219,7 @@ def train(train_loader, val_loader, class_weights, class_encoding):
 
     # Start Training
     print()
-    train = Train(model, teacher, train_loader, optimizer, criterion, metric, device)
+    train = Train(model, None, train_loader, optimizer, criterion, metric, device)
     val = Test(model, val_loader, criterion, metric, device)
     for epoch in range(start_epoch, args.epochs):
         print(">>>> [Epoch: {0:d}] Training".format(epoch))
@@ -282,7 +285,7 @@ def test(model, test_loader, class_weights, class_encoding):
         print("{0}: {1:.4f}".format(key, class_iou))
 
     # Show a batch of samples and labels
-    if args.imshow_batch | 1==1:
+    if args.imshow_batch:
         print("A batch of predictions from the test set...")
         images, _ = iter(test_loader).next()
         predict(model, images, class_encoding)
@@ -344,8 +347,9 @@ if __name__ == '__main__':
             num_classes = len(class_encoding)
             #model = ENet(num_classes).to(device)
             #model = PSPNet(n_classes=num_classes, sizes=(1, 2, 3, 6), psp_size=512, deep_features_size=256, backend='resnet18').to(device)
-            #model = PSPNet(n_classes=num_classes, sizes=(1, 2, 3, 6), psp_size=512, deep_features_size=256, backend='resnet34').to(device)
-            model = BiSeNetV2(n_classes=num_classes).to(device)
+            #model = PSPNet(n_classes=num_classes sizes=(1, 2, 3, 6), psp_size=512, deep_features_size=256, backend='resnet34').to(device)
+            #model = BiSeNetV2(n_classes=num_classes).to(device)
+            model = PSPNet(n_classes=num_classes, sizes=(1, 2, 3, 6), psp_size=2048, deep_features_size=1024, backend='resnet50').to(device)
 
 
 
