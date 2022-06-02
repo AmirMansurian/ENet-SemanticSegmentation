@@ -80,7 +80,7 @@ def save_checkpoint(model, optimizer, epoch, miou, args):
     file in ``args.save_dir`` named "``args.name``_args.txt".
 
     """
-    name = args.name
+    name = args.name + '.pth'
     save_dir = args.save_dir
 
     assert os.path.isdir(
@@ -129,6 +129,10 @@ def load_checkpoint(model, optimizer, folder_dir, filename):
     """
     assert os.path.isdir(
         folder_dir), "The directory \"{0}\" doesn't exist.".format(folder_dir)
+
+
+
+    filename += '.pth'
 
     # Create folder to save model and information
     model_path = os.path.join(folder_dir, filename)
