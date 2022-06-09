@@ -92,7 +92,7 @@ class Train:
 
         """
         self.model.train()
-        #self.teacher.eval()
+        self.teacher.eval()
 
         #criteria_pre = OhemCELoss(0.7)
         #criteria_aux = [OhemCELoss(0.7) for _ in range(4)]
@@ -143,8 +143,8 @@ class Train:
             outputs = self.model(inputs)
 
 
-           # with torch.no_grad():
-             # teacher_out = self.teacher(inputs)[0]
+            with torch.no_grad():
+              teacher_out = self.teacher(inputs)
 
 
             #print(teacher_out[0, :, 0, 0])
@@ -188,13 +188,13 @@ class Train:
             #loss_pre_meter.update(loss_pre.item())
             #_ = [mter.update(lss.item()) for mter, lss in zip(loss_aux_meters, loss_aux)]
            # T = 1
-            #distill_loss = nn.KLDivLoss()(F.log_softmax(outputs/T, dim=1), F.softmax(teacher_out/T, dim=1))
-           # loss = 0.6*(self.criterion(outputs, labels)) + 4 * distill_loss
+            distill_loss = nn.KLDivLoss()(F.log_softmax(outputs/T, dim=1), F.softmax(teacher_out/T, dim=1))
+            loss = 0.6*(self.criterion(outputs, labels)) + 4 * distill_loss
 
             #print(labels.shape)
             #print(outputs.shape)
 
-            loss = self.criterion(outputs, labels)
+            #loss = self.criterion(outputs, labels)
 
             #print(self.criterion(outputs, labels))
             #print(distill_loss)
