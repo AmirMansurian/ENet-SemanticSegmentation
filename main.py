@@ -164,29 +164,32 @@ def train(train_loader, val_loader, class_weights, class_encoding):
     #model = PSPNet(n_classes=num_classes, sizes=(1, 2, 3, 6), psp_size=2048, deep_features_size=1024, backend='resnet50').to(device)
 
     model = PSPNet(n_classes=num_classes, sizes=(1, 2, 3, 6), psp_size=512, deep_features_size=256, backend='resnet18').to(device)
+    #model = PSPNet(n_classes=num_classes, sizes=(1, 2, 3, 6), psp_size=2048, deep_features_size=1024, backend='resnet50').to(device)
 
-    teacher = PSPNet(n_classes=num_classes, sizes=(1, 2, 3, 6), psp_size=2048, deep_features_size=1024, backend='resnet50').to(device)
+
+    #teacher = BiSeNetV2(n_classes=num_classes).cuda()
+    #teacher = PSPNet(n_classes=num_classes, sizes=(1, 2, 3, 6), psp_size=2048, deep_features_size=1024, backend='resnet50').to(device)
 
     # teacher model resnet34
     #model2 = PSPNet(n_classes=num_classes, sizes=(1, 2, 3, 6), psp_size=512, deep_features_size=256, backend='resnet18').to(device)
-
+    
     optimizer = optim.Adam(
         model.parameters(),
         lr=args.learning_rate,
         weight_decay=args.weight_decay)
 
-    optimizer2 = optim.Adam(
-        teacher.parameters(),
-        lr=args.learning_rate,
-        weight_decay=args.weight_decay)
+    #optimizer2 = optim.Adam(
+      #  teacher.parameters(),
+      #  lr=args.learning_rate,
+       # weight_decay=args.weight_decay)
 
     ########### changed ########################
-    teacher = utils.load_checkpoint(teacher, optimizer2, '/', 'resnet50')[0]
+    #teacher = utils.load_checkpoint(teacher, optimizer2, 'save/', 'resnet50.pth')[0]
 
    # teacher = utils.load_checkpoint(model2, None, 'save/ENet_CamVid', args.name)[0]
 
 
-  ################################################################################################################
+  ################################################################################################################  
 
     # We are going to use the CrossEntropyLoss loss function as it's most
     # frequentely used in classification problems with multiple classes which
@@ -208,7 +211,7 @@ def train(train_loader, val_loader, class_weights, class_encoding):
     metric = IoU(num_classes, ignore_index=ignore_index)
 
     # Optionally resume from a checkpoint
-    if args.resume:
+    if args.resume :
         model, optimizer, start_epoch, best_miou = utils.load_checkpoint(
             model, optimizer, args.save_dir, args.name)
         print("Resuming from model: Start epoch = {0} "
@@ -219,7 +222,7 @@ def train(train_loader, val_loader, class_weights, class_encoding):
 
     # Start Training
     print()
-    train = Train(model, teacher, train_loader, optimizer, criterion, metric, device)
+    train = Train(model, None, train_loader, optimizer, criterion, metric, device)
     val = Test(model, val_loader, criterion, metric, device)
     for epoch in range(start_epoch, args.epochs):
         print(">>>> [Epoch: {0:d}] Training".format(epoch))
