@@ -92,7 +92,7 @@ class Train:
 
         """
         self.model.train()
-        self.teacher.eval()
+        #self.teacher.eval()
 
         #criteria_pre = OhemCELoss(0.7)
         #criteria_aux = [OhemCELoss(0.7) for _ in range(4)]
@@ -124,13 +124,13 @@ class Train:
 
             # Forward propagation
            # outputs = self.model(inputs)[0]
-
-
+            
+           
 
             ########################### teacher output ###########################################
             #with torch.no_grad():
             #  teacher_out = self.teacher(inputs)
-
+            
             #distill_loss = nn.KLDivLoss()(F.log_softmax(outputs, dim=1), F.softmax(teacher_out, dim=1))
             ######################################################################################
 
@@ -140,11 +140,12 @@ class Train:
 
             self.optim.zero_grad()
 
-            outputs = self.model(inputs)
+            [outputs, feature_maps] = self.model(inputs)
 
+            #print(feature_maps.shape)
 
-            with torch.no_grad():
-              teacher_out = self.teacher(inputs)
+            #with torch.no_grad():
+              #teacher_out = self.teacher(inputs)
 
 
             #print(teacher_out[0, :, 0, 0])
@@ -187,20 +188,24 @@ class Train:
             #loss_meter.update(loss.item())
             #loss_pre_meter.update(loss_pre.item())
             #_ = [mter.update(lss.item()) for mter, lss in zip(loss_aux_meters, loss_aux)]
-           # T = 1
-            distill_loss = nn.KLDivLoss()(F.log_softmax(outputs/T, dim=1), F.softmax(teacher_out/T, dim=1))
-            loss = 0.6*(self.criterion(outputs, labels)) + 4 * distill_loss
 
+
+            ##########################################
+           ### T = 1
+           ### distill_loss = nn.KLDivLoss()(F.log_softmax(outputs/T, dim=1), F.softmax(teacher_out/T, dim=1))
+           #### loss = self.criterion(outputs, labels) + 10 * distill_loss 
+            #########################################
+            loss = self.criterion(outputs, labels)
             #print(labels.shape)
             #print(outputs.shape)
-
+            
             #loss = self.criterion(outputs, labels)
 
             #print(self.criterion(outputs, labels))
             #print(distill_loss)
 
               # Backpropagation
-
+            
             loss.backward()
             self.optim.step()
 
@@ -237,7 +242,7 @@ class Train:
             #loss = 1* self.criterion(outputs, labels)
             #loss += 0.4 * nn.KLDivLoss()(F.log_softmax(outputs, dim=1), F.softmax(teacher_out, dim=1))
 
-
+          
 
             # Keep track of the evaluation metric
             self.metric.add(outputs.detach(), labels.detach())
@@ -245,8 +250,8 @@ class Train:
             if iteration_loss:
                     print("[Step: %d] Iteration loss: %.4f" % (step, loss.item()))
 
-        #return epoch_loss / len(self.data_loader), self.metric.value()
+        #return epoch_loss / len(self.data_loader), self.metric.value()  
+          
 
-
-        return epoch_loss / len(self.data_loader), self.metric.value()
+        return epoch_loss / len(self.data_loader), self.metric.value() 
        # return loss / len(self.data_loader), self.metric.value()
