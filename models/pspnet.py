@@ -66,8 +66,10 @@ class PSPNet(nn.Module):
 
     def forward(self, x):
         f, class_f = self.feats(x) 
-        p = self.psp(f)
-        p = self.drop_1(p)
+
+        feature_maps = self.psp(f)
+        
+        p = self.drop_1(feature_maps)
 
         p = self.up_1(p)
         p = self.drop_2(p)
@@ -80,4 +82,4 @@ class PSPNet(nn.Module):
 
         auxiliary = F.adaptive_max_pool2d(input=class_f, output_size=(1, 1)).view(-1, class_f.size(1))
 
-        return self.final(p)
+        return [self.final(p), feature_maps]
