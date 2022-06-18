@@ -361,7 +361,7 @@ if __name__ == '__main__':
         optimizer = optim.Adam(model.parameters())
 
         # Load the previoulsy saved model state to the ENet model
-        model = utils.load_checkpoint(model, optimizer, 'save/',
+        model = utils.load_checkpoint(model, optimizer, '/kaggle/working/',
                                       args.name)[0]
 
         if args.mode.lower() == 'test':
