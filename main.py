@@ -185,7 +185,7 @@ def train(train_loader, val_loader, class_weights, class_encoding):
         weight_decay=args.weight_decay)
 
     ########### changed ########################
-    teacher = utils.load_checkpoint(teacher, optimizer2, '/kaggle/working/', 'ResNet50.pth')[0]
+    teacher = utils.load_checkpoint(teacher, optimizer2, '/kaggle/working/', 'ResNet50')[0]
 
    # teacher = utils.load_checkpoint(model2, None, 'save/ENet_CamVid', args.name)[0]
 
