@@ -6,6 +6,24 @@ import torch.cuda.amp as amp
 from lr_scheduler import WarmupPolyLrScheduler
 from meters import TimeMeter, AvgMeter
 import utils
+import numpy as np
+
+
+
+def L2(f_):
+    return (((f_**2).sum(dim=1))**0.5).reshape(f_.shape[0],1,f_.shape[2],f_.shape[3]) + 1e-8
+
+def similarity(feat):
+    feat = feat.float()
+    tmp = L2(feat).detach()
+    feat = feat/tmp
+    feat = feat.reshape(feat.shape[0],feat.shape[1],-1)
+    return torch.einsum('icm,icn->imn', [feat, feat])
+
+def sim_dis_compute(f_S, f_T):
+    sim_err = ((similarity(f_T) - similarity(f_S))**2)/((f_T.shape[-1]*f_T.shape[-2])**2)/f_T.shape[0]
+    sim_dis = sim_err.sum()
+    return sim_dis
 
 
 
@@ -75,8 +93,12 @@ class Train:
         self.data_loader = data_loader
         self.optim = optim
         self.criterion = criterion
+        self.distill_loss = sim_dis_compute
         self.metric = metric
         self.device = device
+
+        self.loss = 0.0
+        self.distillation_loss = 0.0
         ############## teacher ##################
         self.teacher = teacher
 
@@ -92,7 +114,7 @@ class Train:
 
         """
         self.model.train()
-        #self.teacher.eval()
+        self.teacher.eval()
 
         #criteria_pre = OhemCELoss(0.7)
         #criteria_aux = [OhemCELoss(0.7) for _ in range(4)]
@@ -137,16 +159,15 @@ class Train:
            # print(outputs)
             #print(teacher_out)
 
-
-            self.optim.zero_grad()
-
             [outputs, feature_maps] = self.model(inputs)
 
-            #print(feature_maps.shape)
+            with torch.no_grad():
+              [teacher_out, T_f] = self.teacher(inputs)
 
-            #with torch.no_grad():
-              #teacher_out = self.teacher(inputs)
+            T_f.detach()
+             # print(T_f.shape)
 
+            self.optim.zero_grad()
 
             #print(teacher_out[0, :, 0, 0])
             #print(outputs[0, :, 0, 0])
@@ -191,11 +212,35 @@ class Train:
 
 
             ##########################################
-           ### T = 1
-           ### distill_loss = nn.KLDivLoss()(F.log_softmax(outputs/T, dim=1), F.softmax(teacher_out/T, dim=1))
+            T = 1
+            distill_loss = 10 * nn.KLDivLoss()(F.log_softmax(outputs/T, dim=1), F.softmax(teacher_out/T, dim=1))
            #### loss = self.criterion(outputs, labels) + 10 * distill_loss 
             #########################################
-            loss = self.criterion(outputs, labels)
+            
+          
+            #TF = torch.mean(T_f, axis=1)
+            #SF = torch.mean(feature_maps, axis=1)
+
+            TF = T_f
+            SF = feature_maps
+            #print(TF.shape)
+            #print(SF.shape)
+            loss = 0.0
+
+            temp = self.criterion(outputs, labels)
+            self.loss = temp.item()
+            loss = loss + temp
+
+            temp2 = self.distill_loss(TF, SF)
+            self.distillation_loss = temp2.item()
+            loss = loss + temp2
+
+            loss = loss + distill_loss
+           # print(outputs.shape)
+            
+            #print(los(TF, SF))
+            loss = loss + temp
+            #print(loss)
             #print(labels.shape)
             #print(outputs.shape)
             
