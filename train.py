@@ -26,6 +26,13 @@ def sim_dis_compute(f_S, f_T):
     return sim_dis
 
 
+def loss_function (S, T) :
+
+  T = torch.mean(T, axis=1)
+  S = torch.mean(S, axis=1)
+
+  return (T-S).pow(2).mean()
+
 
 def set_optimizer(model):
     if hasattr(model, 'get_params'):
@@ -231,7 +238,7 @@ class Train:
             self.loss = temp.item()
             loss = loss + temp
 
-            temp2 = self.distill_loss(TF, SF)
+            temp2 = loss_function(TF, SF)
             self.distillation_loss = temp2.item()
             loss = loss + temp2
 
