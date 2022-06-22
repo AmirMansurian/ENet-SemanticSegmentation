@@ -121,7 +121,7 @@ class Train:
 
         """
         self.model.train()
-        self.teacher.eval()
+        #self.teacher.eval()
 
         #criteria_pre = OhemCELoss(0.7)
         #criteria_aux = [OhemCELoss(0.7) for _ in range(4)]
