@@ -168,10 +168,10 @@ class Train:
 
             [outputs, feature_maps] = self.model(inputs)
 
-            with torch.no_grad():
-              [teacher_out, T_f] = self.teacher(inputs)
+            #with torch.no_grad():
+             # [teacher_out, T_f] = self.teacher(inputs)
 
-            T_f.detach()
+            #T_f.detach()
              # print(T_f.shape)
 
             self.optim.zero_grad()
@@ -219,8 +219,8 @@ class Train:
 
 
             ##########################################
-            T = 1
-            distill_loss = 10 * nn.KLDivLoss()(F.log_softmax(outputs/T, dim=1), F.softmax(teacher_out/T, dim=1))
+           # T = 1
+           # distill_loss = 10 * nn.KLDivLoss()(F.log_softmax(outputs/T, dim=1), F.softmax(teacher_out/T, dim=1))
            #### loss = self.criterion(outputs, labels) + 10 * distill_loss 
             #########################################
             
@@ -228,8 +228,8 @@ class Train:
             #TF = torch.mean(T_f, axis=1)
             #SF = torch.mean(feature_maps, axis=1)
 
-            TF = T_f
-            SF = feature_maps
+           # TF = T_f
+            #SF = feature_maps
             #print(TF.shape)
             #print(SF.shape)
             loss = 0.0
@@ -238,15 +238,15 @@ class Train:
             self.loss = temp.item()
             loss = loss + temp
 
-            temp2 = loss_function(TF, SF)
-            self.distillation_loss = temp2.item()
-            loss = loss + temp2
+            #temp2 = loss_function(TF, SF)
+           # self.distillation_loss = temp2.item()
+            #loss = loss + temp2
 
-            loss = loss + distill_loss
+           # loss = loss + distill_loss
            # print(outputs.shape)
             
             #print(los(TF, SF))
-            loss = loss + temp
+            #loss = loss + temp
             #print(loss)
             #print(labels.shape)
             #print(outputs.shape)
