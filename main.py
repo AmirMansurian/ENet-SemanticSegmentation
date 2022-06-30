@@ -184,7 +184,7 @@ def train(train_loader, val_loader, class_weights, class_encoding):
         weight_decay=args.weight_decay)
 
     ########### changed ########################
-    teacher = utils.load_checkpoint(teacher, optimizer2, 'save/', 'ResNet50.pth')[0]
+    teacher = utils.load_checkpoint(teacher, optimizer2, '/kaggle/working/', 'ResNet50.pth')[0]
     #utils.save_checkpoint(teacher, optimizer2, args)
     #torch.save(teacher.state_dict(), 'save/ResNet50.pth')
 
