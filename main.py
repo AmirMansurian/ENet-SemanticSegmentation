@@ -160,11 +160,10 @@ def train(train_loader, val_loader, class_weights, class_encoding):
 ############################################### Distillation ###########################################################
 
     # student model E-net
-    #model = ENet(num_classes).to(device)
+    model = ENet(num_classes).to(device)
     #model = PSPNet(n_classes=num_classes, sizes=(1, 2, 3, 6), psp_size=2048, deep_features_size=1024, backend='resnet50').to(device)
 
-    
-    model = PSPNet(n_classes=num_classes, sizes=(1, 2, 3, 6), psp_size=512, deep_features_size=256, backend='resnet18').to(device)
+    #model = PSPNet(n_classes=num_classes, sizes=(1, 2, 3, 6), psp_size=512, deep_features_size=256, backend='resnet18').to(device)
     #model = PSPNet(n_classes=num_classes, sizes=(1, 2, 3, 6), psp_size=2048, deep_features_size=1024, backend='resnet50').to(device)
 
 
@@ -185,9 +184,13 @@ def train(train_loader, val_loader, class_weights, class_encoding):
         weight_decay=args.weight_decay)
 
     ########### changed ########################
-    teacher = utils.load_checkpoint(teacher, optimizer2, '/kaggle/working/', 'ResNet50')[0]
+    teacher = utils.load_checkpoint(teacher, optimizer2, 'save/', 'ResNet50.pth')[0]
+    #utils.save_checkpoint(teacher, optimizer2, args)
+    #torch.save(teacher.state_dict(), 'save/ResNet50.pth')
+
 
    # teacher = utils.load_checkpoint(model2, None, 'save/ENet_CamVid', args.name)[0]
+
 
   ################################################################################################################  
 
@@ -211,9 +214,9 @@ def train(train_loader, val_loader, class_weights, class_encoding):
     metric = IoU(num_classes, ignore_index=ignore_index)
 
     # Optionally resume from a checkpoint
-    if args.resume :
+    if args.resume:
         model, optimizer, start_epoch, best_miou = utils.load_checkpoint(
-            model, optimizer, args.save_dir, args.name)
+            model, optimizer, args.save_dir, 'ResNet50')
         print("Resuming from model: Start epoch = {0} "
               "| Best mean IoU = {1:.4f}".format(start_epoch, best_miou))
     else:
@@ -348,8 +351,8 @@ if __name__ == '__main__':
         if args.mode.lower() == 'test':
             # Intialize a new ENet model
             num_classes = len(class_encoding)
-            #model = ENet(num_classes).to(device)
-            model = PSPNet(n_classes=num_classes, sizes=(1, 2, 3, 6), psp_size=512, deep_features_size=256, backend='resnet18').to(device)
+            model = ENet(num_classes).to(device)
+            #model = PSPNet(n_classes=num_classes, sizes=(1, 2, 3, 6), psp_size=512, deep_features_size=256, backend='resnet18').to(device)
             #model = PSPNet(n_classes=num_classes sizes=(1, 2, 3, 6), psp_size=512, deep_features_size=256, backend='resnet34').to(device)
             #model = BiSeNetV2(n_classes=num_classes).to(device)
             #model = PSPNet(n_classes=num_classes, sizes=(1, 2, 3, 6), psp_size=2048, deep_features_size=1024, backend='resnet50').to(device)
@@ -361,7 +364,7 @@ if __name__ == '__main__':
         optimizer = optim.Adam(model.parameters())
 
         # Load the previoulsy saved model state to the ENet model
-        model = utils.load_checkpoint(model, optimizer, '/kaggle/working/',
+        model = utils.load_checkpoint(model, optimizer, 'save/',
                                       args.name)[0]
 
         if args.mode.lower() == 'test':
