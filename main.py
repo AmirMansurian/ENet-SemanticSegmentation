@@ -216,7 +216,7 @@ def train(train_loader, val_loader, class_weights, class_encoding):
     # Optionally resume from a checkpoint
     if args.resume:
         model, optimizer, start_epoch, best_miou = utils.load_checkpoint(
-            model, optimizer, args.save_dir, 'ResNet50')
+            model, optimizer, args.save_dir, args.name)
         print("Resuming from model: Start epoch = {0} "
               "| Best mean IoU = {1:.4f}".format(start_epoch, best_miou))
     else:
