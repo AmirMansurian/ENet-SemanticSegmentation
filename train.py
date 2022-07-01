@@ -221,8 +221,8 @@ class Train:
 
             ##########################################
             T = 10
-            distill_loss = nn.KLDivLoss()(F.log_softmax(outputs/T, dim=1), F.softmax(teacher_out/T, dim=1))
-            loss = self.criterion(outputs, labels) + 10 * distill_loss 
+            temp2 = nn.KLDivLoss()(F.log_softmax(outputs/T, dim=1), F.softmax(teacher_out/T, dim=1))
+            self.distillation_loss = temp2.item()
             #########################################
             
           
@@ -237,7 +237,9 @@ class Train:
 
             temp = self.criterion(outputs, labels)
             self.loss = temp.item()
-            loss = loss + temp
+            
+            
+            loss = temp + 10 * temp2
 
             #temp2 = loss_function(TF, SF)
             #self.distillation_loss = temp2.item()
