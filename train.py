@@ -220,7 +220,7 @@ class Train:
 
 
             ##########################################
-            T = 1
+            T = 10
             distill_loss = nn.KLDivLoss()(F.log_softmax(outputs/T, dim=1), F.softmax(teacher_out/T, dim=1))
             loss = self.criterion(outputs, labels) + 10 * distill_loss 
             #########################################
